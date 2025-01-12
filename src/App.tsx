@@ -54,7 +54,7 @@ function App() {
       <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
         {" "}
         <Origami className="mt-1" />
-        Quick Response Code Generator
+        Quick Response Codes
       </h1>
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
