@@ -59,7 +59,7 @@ function App() {
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
           type="text "
-          placeholder="Wow, such blank. Much creativity. Please, bless us with your masterpiece."
+          placeholder="Wow, such blank. Much creativity."
           onChange={(e) => setQrURL(e.target.value)}
           onKeyDown={(e) => (e.code == "Enter" ? captureQr() : null)}
         />
