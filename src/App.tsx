@@ -59,18 +59,18 @@ function App() {
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
           type="text "
-          placeholder="content"
+          placeholder="Wow, such blank. Much creativity. Please, bless us with your masterpiece."
           onChange={(e) => setQrURL(e.target.value)}
           onKeyDown={(e) => (e.code == "Enter" ? captureQr() : null)}
         />
 
-        <Button onClick={() => downloadQr()}>Download</Button>
+        {qrURL && <Button onClick={() => downloadQr()}>Download</Button>}
       </div>
 
       {qrURL && (
         <div className="flex flex-col gap-2 sm:w-[50%] mb-5 mx-auto mt-8">
           <Label htmlFor="logo" className="text-center">
-            Add a logo?
+            Oh, you want to add a logo too?
           </Label>
           <Input
             type="file"
@@ -83,11 +83,10 @@ function App() {
                 reader.onloadend = () => {
                   setImageURI(reader.result as string);
                   console.log(reader.result);
-                  // setTimeout(() => {
-                  //   captureQr()
-                  // }, 1000);
                 };
                 reader.readAsDataURL(file);
+              } else {
+                setImageURI("");
               }
             }}
           />
