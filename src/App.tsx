@@ -28,13 +28,64 @@ function App() {
     const image = `<image href="${imageURI}" x="${logoX}"  y="${logoY}" width="50" height="50" /> </svg>`;
     if (imageURI) {
       const qrWithImg = qr.svg().replaceAll("</svg>", image);
-
       setsvgContent(qrWithImg);
     } else {
       setsvgContent(qr.svg());
     }
     console.log(svgContent);
   };
+  // @ts-expect-error fuck this
+  function svgStringtoPng(svgString, callback) {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const MAX_DIMENSION = 4000; // Maximum allowed dimension
+
+      // Calculate aspect ratio and scale
+      const imgAspectRatio = img.width / img.height;
+      const canvasAspectRatio = MAX_DIMENSION / MAX_DIMENSION;
+      let scale;
+
+      if (imgAspectRatio > canvasAspectRatio) {
+        scale = MAX_DIMENSION / img.width;
+      } else {
+        scale = MAX_DIMENSION / img.height;
+      }
+
+      // Set canvas dimensions based on scale and aspect ratio
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      // @ts-expect-error fuck this
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        img.width,
+        img.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      canvas.toBlob((blob) => {
+        // @ts-expect-error fuck this
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "qrcode.png";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        callback(null, url); // Optionally return the URL
+      }, "image/png");
+    };
+    img.src =
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
+  }
 
   const downloadQr = () => {
     const link = document.createElement("a");
@@ -42,6 +93,15 @@ function App() {
     link.download = "qrcode.svg";
     document.body.appendChild(link);
     link.click();
+
+    // @ts-expect-error fuck this
+    svgStringtoPng(svgContent, (err, url) => {
+      if (err) {
+        console.error("Error converting SVG to PNG:", err);
+      } else {
+        console.log("PNG image URL:", url);
+      }
+    });
     document.body.removeChild(link);
   };
   useEffect(() => {
