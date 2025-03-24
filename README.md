@@ -1,50 +1,50 @@
-# React + TypeScript + Vite
+# QR Code Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
+The QR Code Generator is a simple tool that allows users to create QR codes for various types of data, including URLs, text, emails, and more. This project is useful for generating quick QR codes that can be scanned by mobile devices.
 
-Currently, two official plugins are available:
+## Features
+- Generate QR codes from text, URLs, or other data inputs
+- Download QR codes as image files (PNG, JPG, SVG, PDF, etc.)
+- Customizable QR code size and colors
+- Support for different encoding formats
+- Convert QR codes from SVG to PNG using `svg2png`
+- Export QR codes as PDFs using `html-pdf`
+- Enhanced UI with Radix UI components
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation
+To run the QR Generator locally, follow these steps:
 
-## Expanding the ESLint configuration
+1. Clone the repository:
+  
+2. Navigate to the project directory:
+  
+3. Install dependencies:
+   ```sh
+   npm install  # Install all required packages
+   ```
+4. Start the application:
+   ```sh
+   npm run dev  # Run the development server
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Usage
+1. Open the application in a browser.
+2. Enter the data you want to encode in the QR code.
+3. Customize the QR code settings if necessary.
+4. Generate the QR code.
+5. Download or share the generated QR code.
 
-- Configure the top-level `parserOptions` property like this:
+## Technologies Used
+- **Frontend:** React, Tailwind CSS, Radix UI (`@radix-ui/react-label`, `@radix-ui/react-slot`)
+- **QR Code Generation:** `qrcode-svg`, `canvas`
+- **Image Processing:** `svg2png`, `svg2png-converter`
+- **PDF Export:** `html-pdf`
+- **3D Visualization (optional):** `three.js`
+- **Utility Libraries:** `clsx`, `class-variance-authority`, `tailwind-merge`, `tailwindcss-animate`
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Contributing
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
