@@ -5,6 +5,7 @@ import "./App.css";
 import QRCode from "qrcode-svg";
 import { Input } from "@/components/ui/input";
 import { Origami } from "lucide-react";
+import { ModeToggle } from "./components/ui/darkmodemenu";
 
 function App() {
   const [svgContent, setsvgContent] = useState("");
@@ -111,11 +112,16 @@ function App() {
   }, [imageURI, qrURL]);
   return (
     <>
+    <div className="flex w-full justify-center"> 
       <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
         {" "}
         <Origami className="mt-1" />
         Quick Response Codes
       </h1>
+      <div className="ml-8"> 
+      <ModeToggle />
+      </div>
+       </div>
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
           type="text "
@@ -159,6 +165,7 @@ function App() {
           dangerouslySetInnerHTML={{ __html: svgContent }}
         ></div>
       )}
+
     </>
   );
 }
