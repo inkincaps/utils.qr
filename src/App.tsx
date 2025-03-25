@@ -6,12 +6,22 @@ import QRCode from "qrcode-svg";
 import { Input } from "@/components/ui/input";
 import { Origami } from "lucide-react";
 import { ModeToggle } from "./components/ui/darkmodemenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function App() {
   const [svgContent, setsvgContent] = useState("");
   const [qrURL, setQrURL] = useState("");
   const [imageURI, setImageURI] = useState("");
+  const [crlevel , setCrlevel ] =  useState<"L" | "M" | "Q" | "H">("M");
+
   const captureQr = () => {
+
     const qr = new QRCode({
       content: qrURL,
       padding: 4,
@@ -19,7 +29,7 @@ function App() {
       height: 256,
       color: "#000000",
       background: "#ffffff",
-      ecl: "M",
+      ecl: crlevel ,
     });
     const logoWidth = 50;
     const logoHeight = 50;
@@ -33,7 +43,7 @@ function App() {
     } else {
       setsvgContent(qr.svg());
     }
-    console.log(svgContent);
+    // console.log(svgContent);
   };
   // @ts-expect-error fuck this
   function svgStringtoPng(svgString, callback) {
@@ -109,18 +119,58 @@ function App() {
     if (qrURL) {
       captureQr();
     }
-  }, [imageURI, qrURL]);
+  }, [imageURI, qrURL , crlevel]);
   return (
     <>
+      <div className="fixed right-10 top-4"> 
+      <ModeToggle />
+      </div>
     <div className="flex w-full justify-center"> 
       <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
         {" "}
         <Origami className="mt-1" />
         Quick Response Codes
       </h1>
-      <div className="ml-8"> 
-      <ModeToggle />
-      </div>
+    
+      {qrURL &&  <div className=" ml-8">
+
+     
+      <DropdownMenu>
+   
+     
+        
+      <TooltipProvider> 
+        <Tooltip>
+        <TooltipTrigger asChild>
+        <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="">
+          {crlevel}
+        </Button>
+        </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          QR code error correction level
+        </TooltipContent>
+      </Tooltip>
+      </TooltipProvider>
+       
+    
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setCrlevel("L")}>
+        Low
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setCrlevel("M")}>
+        Medium
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setCrlevel("Q")}>
+        Quartile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setCrlevel("H")}>
+        High
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+      </div> }
        </div>
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
