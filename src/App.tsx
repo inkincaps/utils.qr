@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import "./App.css";
 import QRCode from "qrcode-svg";
+import * as qr from 'qr-image';
 import { Input } from "@/components/ui/input";
 import { Origami } from "lucide-react";
 import { ModeToggle } from "./components/ui/darkmodemenu";
@@ -13,15 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import JSZip from 'jszip';
 
 function App() {
-  const [svgContent, setsvgContent] = useState("");
+  const [svgContent, setSvgContent] = useState("");
   const [qrURL, setQrURL] = useState("");
   const [imageURI, setImageURI] = useState("");
-  const [crlevel , setCrlevel ] =  useState<"L" | "M" | "Q" | "H">("M");
+  const [crlevel, setCrlevel] = useState<"L" | "M" | "Q" | "H">("M");
 
   const captureQr = () => {
-
     const qr = new QRCode({
       content: qrURL,
       padding: 4,
@@ -29,158 +30,152 @@ function App() {
       height: 256,
       color: "#000000",
       background: "#ffffff",
-      ecl: crlevel ,
+      ecl: crlevel,
     });
+
     const logoWidth = 50;
     const logoHeight = 50;
     const logoX = (256 - logoWidth) / 2;
     const logoY = (256 - logoHeight) / 2;
 
-    const image = `<image href="${imageURI}" x="${logoX}"  y="${logoY}" width="50" height="50" /> </svg>`;
-    if (imageURI) {
-      const qrWithImg = qr.svg().replaceAll("</svg>", image);
-      setsvgContent(qrWithImg);
-    } else {
-      setsvgContent(qr.svg());
-    }
-    // console.log(svgContent);
+    const image = `<image href="${imageURI}" x="${logoX}" y="${logoY}" width="50" height="50" /> </svg>`;
+    
+    const finalSVG = imageURI 
+      ? qr.svg().replace("</svg>", image)
+      : qr.svg();
+
+    setSvgContent(finalSVG);
   };
-  // @ts-expect-error fuck this
-  function svgStringtoPng(svgString, callback) {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const MAX_DIMENSION = 4000; // Maximum allowed dimension
 
-      // Calculate aspect ratio and scale
-      const imgAspectRatio = img.width / img.height;
-      const canvasAspectRatio = MAX_DIMENSION / MAX_DIMENSION;
-      let scale;
+  const svgStringToPng = (svgString: string): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_DIMENSION = 4000;
 
-      if (imgAspectRatio > canvasAspectRatio) {
-        scale = MAX_DIMENSION / img.width;
-      } else {
-        scale = MAX_DIMENSION / img.height;
-      }
+        const imgAspectRatio = img.width / img.height;
+        const canvasAspectRatio = MAX_DIMENSION / MAX_DIMENSION;
+        const scale = imgAspectRatio > canvasAspectRatio
+          ? MAX_DIMENSION / img.width
+          : MAX_DIMENSION / img.height;
 
-      // Set canvas dimensions based on scale and aspect ratio
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
 
-      const ctx = canvas.getContext("2d");
-      // @ts-expect-error fuck this
-      ctx.drawImage(
-        img,
-        0,
-        0,
-        img.width,
-        img.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
 
-      canvas.toBlob((blob) => {
-        // @ts-expect-error fuck this
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "qrcode.png";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        callback(null, url); // Optionally return the URL
-      }, "image/png");
-    };
-    img.src =
-      "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
-  }
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          img.width,
+          img.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
 
-  const downloadQr = () => {
-    const link = document.createElement("a");
-    link.href = `data:image/svg+xml;base64,${btoa(svgContent)}`;
-    link.download = "qrcode.svg";
-    document.body.appendChild(link);
-    link.click();
-
-    // @ts-expect-error fuck this
-    svgStringtoPng(svgContent, (err, url) => {
-      if (err) {
-        console.error("Error converting SVG to PNG:", err);
-      } else {
-        console.log("PNG image URL:", url);
-      }
+        canvas.toBlob((blob) => {
+          blob ? resolve(blob) : reject(new Error("Conversion failed"));
+        }, "image/png");
+      };
+      img.onerror = reject;
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     });
-    document.body.removeChild(link);
   };
+  // generate eps
+  const generateEps = (text: string) => {
+    // Convert error correction level to qr-image format
+    const ecLevel = crlevel.toLowerCase() as 'L' | 'M' | 'Q' | 'H';
+    return qr.imageSync(text, { type: 'eps', ec_level: ecLevel });
+  };
+
+  const downloadQr = async () => {
+    try {
+      const zip = new JSZip();
+      
+      zip.file("qrcode.svg", svgContent);
+      
+      const pngBlob = await svgStringToPng(svgContent);
+      zip.file("qrcode.png", pngBlob);
+
+      const epsBuffer = generateEps(qrURL);
+      const epsBlob = new Blob([epsBuffer]);
+      zip.file("qrcode.eps", epsBlob);
+
+      const content = await zip.generateAsync({ type: "blob" });
+      
+      const url = URL.createObjectURL(content);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "qrcode.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating ZIP file:", error);
+    }
+  };
+
   useEffect(() => {
     if (qrURL) {
       captureQr();
     }
-  }, [imageURI, qrURL , crlevel]);
+  }, [imageURI, qrURL, crlevel]);
+
   return (
     <>
       <div className="fixed right-10 top-4"> 
-      <ModeToggle />
+        <ModeToggle />
       </div>
-    <div className="flex w-full justify-center"> 
-      <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
-        {" "}
-        <Origami className="mt-1" />
-        Quick Response Codes
-      </h1>
-    
-      {qrURL &&  <div className=" ml-8">
-
-     
+      
+      <div className="fixed left-10 justify-center"> 
+  <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
+    <Origami className="mt-1" />
+    Quick Response Codes
+    {qrURL && (
       <DropdownMenu>
-   
-     
+        <TooltipProvider> 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <div className="ml-2 bg-gray-100 px-2 py-1 rounded text-sm cursor-pointer">
+                  {crlevel}
+                </div>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              QR code error correction level
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         
-      <TooltipProvider> 
-        <Tooltip>
-        <TooltipTrigger asChild>
-        <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="">
-          {crlevel}
-        </Button>
-        </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          QR code error correction level
-        </TooltipContent>
-      </Tooltip>
-      </TooltipProvider>
-       
-    
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setCrlevel("L")}>
-        Low
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setCrlevel("M")}>
-        Medium
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setCrlevel("Q")}>
-        Quartile
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setCrlevel("H")}>
-        High
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-      </div> }
-       </div>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setCrlevel("L")}>Low</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setCrlevel("M")}>Medium</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setCrlevel("Q")}>Quartile</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setCrlevel("H")}>High</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )}
+  </h1>
+</div>
+
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
-          type="text "
+          type="text"
           placeholder="Wow, such blank. Much creativity."
           onChange={(e) => setQrURL(e.target.value)}
-          onKeyDown={(e) => (e.code == "Enter" ? captureQr() : null)}
+          onKeyDown={(e) => e.code === "Enter" && captureQr()}
         />
-
-        {qrURL && <Button onClick={() => downloadQr()}>Download</Button>}
+        {qrURL && <Button onClick={downloadQr}>Download</Button>}
       </div>
 
       {qrURL && (
@@ -196,10 +191,7 @@ function App() {
               const file = e.target.files?.[0];
               if (file) {
                 const reader = new FileReader();
-                reader.onloadend = () => {
-                  setImageURI(reader.result as string);
-                  console.log(reader.result);
-                };
+                reader.onloadend = () => setImageURI(reader.result as string);
                 reader.readAsDataURL(file);
               } else {
                 setImageURI("");
@@ -211,13 +203,14 @@ function App() {
 
       {qrURL && (
         <div
-          className="justify-center  flex"
+          className="justify-center flex"
           dangerouslySetInnerHTML={{ __html: svgContent }}
-        ></div>
+        />
       )}
-
     </>
   );
 }
 
 export default App;
+
+
