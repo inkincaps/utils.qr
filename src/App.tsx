@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import "./App.css";
 import QRCode from "qrcode-svg";
-import * as qr from 'qr-image';
+import * as qr from "qr-image";
 import { Input } from "@/components/ui/input";
 import { Origami } from "lucide-react";
 import { ModeToggle } from "./components/ui/darkmodemenu";
@@ -12,9 +12,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import JSZip from 'jszip';
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import JSZip from "jszip";
 
 function App() {
   const [svgContent, setSvgContent] = useState("");
@@ -39,10 +44,8 @@ function App() {
     const logoY = (256 - logoHeight) / 2;
 
     const image = `<image href="${imageURI}" x="${logoX}" y="${logoY}" width="50" height="50" /> </svg>`;
-    
-    const finalSVG = imageURI 
-      ? qr.svg().replace("</svg>", image)
-      : qr.svg();
+
+    const finalSVG = imageURI ? qr.svg().replace("</svg>", image) : qr.svg();
 
     setSvgContent(finalSVG);
   };
@@ -56,9 +59,10 @@ function App() {
 
         const imgAspectRatio = img.width / img.height;
         const canvasAspectRatio = MAX_DIMENSION / MAX_DIMENSION;
-        const scale = imgAspectRatio > canvasAspectRatio
-          ? MAX_DIMENSION / img.width
-          : MAX_DIMENSION / img.height;
+        const scale =
+          imgAspectRatio > canvasAspectRatio
+            ? MAX_DIMENSION / img.width
+            : MAX_DIMENSION / img.height;
 
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
@@ -86,22 +90,24 @@ function App() {
         }, "image/png");
       };
       img.onerror = reject;
-      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+        svgString
+      )}`;
     });
   };
   // generate eps
   const generateEps = (text: string) => {
     // Convert error correction level to qr-image format
-    const ecLevel = crlevel.toLowerCase() as 'L' | 'M' | 'Q' | 'H';
-    return qr.imageSync(text, { type: 'eps', ec_level: ecLevel });
+    const ecLevel = crlevel.toLowerCase() as "L" | "M" | "Q" | "H";
+    return qr.imageSync(text, { type: "eps", ec_level: ecLevel });
   };
 
   const downloadQr = async () => {
     try {
       const zip = new JSZip();
-      
+
       zip.file("qrcode.svg", svgContent);
-      
+
       const pngBlob = await svgStringToPng(svgContent);
       zip.file("qrcode.png", pngBlob);
 
@@ -110,7 +116,7 @@ function App() {
       zip.file("qrcode.eps", epsBlob);
 
       const content = await zip.generateAsync({ type: "blob" });
-      
+
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
@@ -132,41 +138,49 @@ function App() {
 
   return (
     <>
-      <div className="fixed right-10 top-4"> 
+      <div className="fixed right-10 top-4">
         <ModeToggle />
       </div>
-      
-      <div className="fixed left-10 justify-center"> 
-  <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
-    <Origami className="mt-1" />
-    Quick Response Codes
-    {qrURL && (
-      <DropdownMenu>
-        <TooltipProvider> 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <div className="ml-2 bg-gray-100 px-2 py-1 rounded text-sm cursor-pointer">
-                  {crlevel}
-                </div>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              QR code error correction level
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setCrlevel("L")}>Low</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setCrlevel("M")}>Medium</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setCrlevel("Q")}>Quartile</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setCrlevel("H")}>High</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    )}
-  </h1>
-</div>
+
+      <div className="fixed left-10 justify-center">
+      <h1 className="text-2xl font-bold mb-4 mt-4 sm:mt-1 flex gap-3 justify-center items-center">
+          <Origami className="mt-1" />
+          Quick Response Codes
+          {qrURL && (
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <div className="ml-2 bg-gray-100 px-2 py-1 rounded text-sm cursor-pointer">
+                        {crlevel}
+                      </div>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    QR code error correction level
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setCrlevel("L")}>
+                  Low
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCrlevel("M")}>
+                  Medium
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCrlevel("Q")}>
+                  Quartile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCrlevel("H")}>
+                  High
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </h1>
+      </div>
 
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
@@ -212,5 +226,3 @@ function App() {
 }
 
 export default App;
-
-
