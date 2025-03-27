@@ -1,5 +1,5 @@
 import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import "./App.css";
 import QRCode from "qrcode-svg";
@@ -11,17 +11,35 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function App() {
   const [svgContent, setsvgContent] = useState("");
   const [qrURL, setQrURL] = useState("");
   const [imageURI, setImageURI] = useState("");
-  const [crlevel , setCrlevel ] =  useState<"L" | "M" | "Q" | "H">("M");
+  const [crlevel, setCrlevel] = useState<"L" | "M" | "Q" | "H">("M");
+
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleInputChange = (e: { target: { value: any } }) => {
+    const value = e.target.value;
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      setQrURL(value);
+    }, 500);
+  };
 
   const captureQr = () => {
-
     const qr = new QRCode({
       content: qrURL,
       padding: 4,
@@ -29,7 +47,7 @@ function App() {
       height: 256,
       color: "#000000",
       background: "#ffffff",
-      ecl: crlevel ,
+      ecl: crlevel,
     });
     const logoWidth = 50;
     const logoHeight = 50;
@@ -119,64 +137,62 @@ function App() {
     if (qrURL) {
       captureQr();
     }
-  }, [imageURI, qrURL , crlevel]);
+  }, [imageURI, qrURL, crlevel]);
+
   return (
     <>
-      <div className="fixed right-10 top-4"> 
-      <ModeToggle />
+      <div className="fixed right-10 top-4">
+        <ModeToggle />
       </div>
-    <div className="flex w-full justify-center"> 
-      <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
-        {" "}
-        <Origami className="mt-1" />
-        Quick Response Codes
-      </h1>
-    
-      {qrURL &&  <div className=" ml-8">
+      <div className="flex w-full justify-center">
+        <h1 className="text-2xl font-bold mb-4 flex gap-3 justify-center items-center">
+          {" "}
+          <Origami className="mt-1" />
+          Quick Response Codes
+        </h1>
 
-     
-      <DropdownMenu>
-   
-     
-        
-      <TooltipProvider> 
-        <Tooltip>
-        <TooltipTrigger asChild>
-        <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="">
-          {crlevel}
-        </Button>
-        </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          QR code error correction level
-        </TooltipContent>
-      </Tooltip>
-      </TooltipProvider>
-       
-    
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setCrlevel("L")}>
-        Low
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setCrlevel("M")}>
-        Medium
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setCrlevel("Q")}>
-        Quartile
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setCrlevel("H")}>
-        High
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-      </div> }
-       </div>
+        {qrURL && (
+          <div className=" ml-8">
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="">
+                        {crlevel}
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    QR code error correction level
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setCrlevel("L")}>
+                  Low
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCrlevel("M")}>
+                  Medium
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCrlevel("Q")}>
+                  Quartile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCrlevel("H")}>
+                  High
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
       <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
         <Input
           type="text "
           placeholder="Wow, such blank. Much creativity."
-          onChange={(e) => setQrURL(e.target.value)}
+          // onChange={(e) => setQrURL(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={(e) => (e.code == "Enter" ? captureQr() : null)}
         />
 
@@ -215,7 +231,6 @@ function App() {
           dangerouslySetInnerHTML={{ __html: svgContent }}
         ></div>
       )}
-
     </>
   );
 }
