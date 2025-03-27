@@ -15,6 +15,7 @@
     , "lib": [
       
       "ES2021.String"
-    ]
+    ],
+    "jsx": "react",
   }
 }
