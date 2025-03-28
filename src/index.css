@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
- 
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -31,6 +29,9 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    /* Scrollbar custom properties */
+    --scrollbar-thumb: #d4d4d4;
+    --scrollbar-track: #f5f5f5;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -57,6 +58,9 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    /* Dark mode scrollbar colors */
+    --scrollbar-thumb: #404040;
+    --scrollbar-track: #262626;
   }
 }
 
@@ -66,5 +70,31 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb);
   }
 }
