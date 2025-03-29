@@ -6,7 +6,7 @@ import App from './App.tsx'
 import { ThemeProvider } from './components/ui/theme-provider.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  // <StrictMode>
+  <StrictMode>
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
@@ -15,5 +15,5 @@ createRoot(document.getElementById('root')!).render(
     >
       <App />
     </ThemeProvider>
-  // </StrictMode>,
+  </StrictMode>,
 )
