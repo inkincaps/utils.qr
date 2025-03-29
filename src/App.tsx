@@ -37,7 +37,7 @@ function App() {
     const image = `<image href="${currentLogo}" x="${logoX}" y="${logoY}" width="50" height="50" /> </svg>`;
     const finalSVG = currentLogo ? qr.svg().replace("</svg>", image) : qr.svg();
 
-    setSvgContents(prev => {
+    setSvgContents((prev) => {
       const newContents = [...prev];
       newContents[index] = finalSVG;
       return newContents;
@@ -89,7 +89,7 @@ function App() {
       )}`;
     });
   };
-  
+
   // generate eps
   const generateEps = (text: string) => {
     const ecLevel = crlevel.toLowerCase() as "L" | "M" | "Q" | "H";
@@ -103,7 +103,7 @@ function App() {
       for (let index = 0; index < qrURL.length; index++) {
         const folderName = `qrcode_${index + 1}`;
         zip.file(`${folderName}/qrcode.svg`, svgContents[index]);
-        
+
         // Add PNG and EPS versions
         const pngBlob = await svgStringToPng(svgContents[index]);
         zip.file(`${folderName}/qrcode.png`, pngBlob);
@@ -134,7 +134,7 @@ function App() {
   };
 
   const handleLogoChange = (index: number, logoUri: string) => {
-    setImageURIs(prev => {
+    setImageURIs((prev) => {
       const newImageURIs = [...prev];
       newImageURIs[index] = logoUri;
       return newImageURIs;
@@ -152,18 +152,18 @@ function App() {
       <div className="fixed right-10 top-4 z-50">
         <ModeToggle />
       </div>
-      
-      <QRCodeHeader 
-        crlevel={crlevel} 
-        setCrlevel={setCrlevel} 
-        hasContent={qrURL.length > 0} 
+
+      <QRCodeHeader
+        crlevel={crlevel}
+        setCrlevel={setCrlevel}
+        hasContent={qrURL.length > 0}
       />
-      <QRCodeInput 
+      <QRCodeInput
         onValuesChange={handleValuesChange}
         onDownload={downloadQr}
         hasContent={qrURL.length > 0}
       />
-      <QRCodeList 
+      <QRCodeList
         urls={qrURL}
         svgContents={svgContents}
         onLogoChange={handleLogoChange}
