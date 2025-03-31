@@ -1,35 +1,25 @@
-import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import "./App.css";
 import QRCode from "qrcode-svg";
 import * as qr from "qr-image";
-import { Input } from "@/components/ui/input";
-import { Origami } from "lucide-react";
-import { ModeToggle } from "./components/ui/darkmodemenu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import JSZip from "jszip";
+import { ModeToggle } from "./components/ui/darkmodemenu";
+import { QRCodeHeader } from "./components/QRCode/QRCodeHeader";
+import { QRCodeInput } from "./components/QRCode/QRCodeInput";
+import { QRCodeList } from "./components/QRCode/QRCodeList";
 
 function App() {
-  const [svgContent, setSvgContent] = useState("");
-  const [qrURL, setQrURL] = useState("");
-  const [imageURI, setImageURI] = useState("");
+  const [svgContents, setSvgContents] = useState<string[]>([]);
+  const [qrURL, setQrURL] = useState<string[]>([]);
+  const [imageURIs, setImageURIs] = useState<string[]>([]);
   const [crlevel, setCrlevel] = useState<"L" | "M" | "Q" | "H">("M");
 
-  const captureQr = () => {
+  const captureQr = (index: number) => {
+    if (!qrURL[index]?.trim()) {
+      return;
+    }
+
     const qr = new QRCode({
-      content: qrURL,
+      content: qrURL[index],
       padding: 4,
       width: 256,
       height: 256,
@@ -43,11 +33,15 @@ function App() {
     const logoX = (256 - logoWidth) / 2;
     const logoY = (256 - logoHeight) / 2;
 
-    const image = `<image href="${imageURI}" x="${logoX}" y="${logoY}" width="50" height="50" /> </svg>`;
+    const currentLogo = imageURIs[index];
+    const image = `<image href="${currentLogo}" x="${logoX}" y="${logoY}" width="50" height="50" /> </svg>`;
+    const finalSVG = currentLogo ? qr.svg().replace("</svg>", image) : qr.svg();
 
-    const finalSVG = imageURI ? qr.svg().replace("</svg>", image) : qr.svg();
-
-    setSvgContent(finalSVG);
+    setSvgContents((prev) => {
+      const newContents = [...prev];
+      newContents[index] = finalSVG;
+      return newContents;
+    });
   };
 
   const svgStringToPng = (svgString: string): Promise<Blob> => {
@@ -95,9 +89,9 @@ function App() {
       )}`;
     });
   };
+
   // generate eps
   const generateEps = (text: string) => {
-    // Convert error correction level to qr-image format
     const ecLevel = crlevel.toLowerCase() as "L" | "M" | "Q" | "H";
     return qr.imageSync(text, { type: "eps", ec_level: ecLevel });
   };
@@ -106,21 +100,24 @@ function App() {
     try {
       const zip = new JSZip();
 
-      zip.file("qrcode.svg", svgContent);
+      for (let index = 0; index < qrURL.length; index++) {
+        const folderName = `qrcode_${index + 1}`;
+        zip.file(`${folderName}/qrcode.svg`, svgContents[index]);
 
-      const pngBlob = await svgStringToPng(svgContent);
-      zip.file("qrcode.png", pngBlob);
+        // Add PNG and EPS versions
+        const pngBlob = await svgStringToPng(svgContents[index]);
+        zip.file(`${folderName}/qrcode.png`, pngBlob);
 
-      const epsBuffer = generateEps(qrURL);
-      const epsBlob = new Blob([epsBuffer]);
-      zip.file("qrcode.eps", epsBlob);
+        const epsBuffer = generateEps(qrURL[index]);
+        const epsBlob = new Blob([epsBuffer]);
+        zip.file(`${folderName}/qrcode.eps`, epsBlob);
+      }
 
       const content = await zip.generateAsync({ type: "blob" });
-
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "qrcode.zip";
+      link.download = "qrcodes.zip";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -130,98 +127,48 @@ function App() {
     }
   };
 
+  const handleValuesChange = (values: string[]) => {
+    setQrURL(values);
+    setImageURIs(new Array(values.length).fill(""));
+    setSvgContents(new Array(values.length).fill(""));
+  };
+
+  const handleLogoChange = (index: number, logoUri: string) => {
+    setImageURIs((prev) => {
+      const newImageURIs = [...prev];
+      newImageURIs[index] = logoUri;
+      return newImageURIs;
+    });
+  };
+
   useEffect(() => {
-    if (qrURL) {
-      captureQr();
-    }
-  }, [imageURI, qrURL, crlevel]);
+    qrURL.forEach((_, index) => {
+      captureQr(index);
+    });
+  }, [qrURL, imageURIs, crlevel]);
 
   return (
-    <>
-      <div className="fixed right-10 top-4">
+    <div className="min-h-screen bg-background overflow-hidden">
+      <div className="fixed right-10 top-4 z-50">
         <ModeToggle />
       </div>
 
-      <div className="fixed left-10 justify-center">
-      <h1 className="text-2xl font-bold mb-4 mt-4 sm:mt-1 flex gap-3 justify-center items-center">
-          <Origami className="mt-1" />
-          Quick Response Codes
-          {qrURL && (
-            <DropdownMenu>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <div className="ml-2 bg-gray-100 px-2 py-1 rounded text-sm cursor-pointer">
-                        {crlevel}
-                      </div>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    QR code error correction level
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setCrlevel("L")}>
-                  Low
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setCrlevel("M")}>
-                  Medium
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setCrlevel("Q")}>
-                  Quartile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setCrlevel("H")}>
-                  High
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </h1>
-      </div>
-
-      <div className="flex gap-2 sm:w-[50%] mb-5 justify-center mx-auto mt-20">
-        <Input
-          type="text"
-          placeholder="Wow, such blank. Much creativity."
-          onChange={(e) => setQrURL(e.target.value)}
-          onKeyDown={(e) => e.code === "Enter" && captureQr()}
-        />
-        {qrURL && <Button onClick={downloadQr}>Download</Button>}
-      </div>
-
-      {qrURL && (
-        <div className="flex flex-col gap-2 sm:w-[50%] mb-5 mx-auto mt-8">
-          <Label htmlFor="logo" className="text-center">
-            Oh, you want to add a logo too?
-          </Label>
-          <Input
-            type="file"
-            className="pt-[6px]"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => setImageURI(reader.result as string);
-                reader.readAsDataURL(file);
-              } else {
-                setImageURI("");
-              }
-            }}
-          />
-        </div>
-      )}
-
-      {qrURL && (
-        <div
-          className="justify-center flex"
-          dangerouslySetInnerHTML={{ __html: svgContent }}
-        />
-      )}
-    </>
+      <QRCodeHeader
+        crlevel={crlevel}
+        setCrlevel={setCrlevel}
+        hasContent={qrURL.length > 0}
+      />
+      <QRCodeInput
+        onValuesChange={handleValuesChange}
+        onDownload={downloadQr}
+        hasContent={qrURL.length > 0}
+      />
+      <QRCodeList
+        urls={qrURL}
+        svgContents={svgContents}
+        onLogoChange={handleLogoChange}
+      />
+    </div>
   );
 }
 
