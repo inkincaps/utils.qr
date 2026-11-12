@@ -1,7 +1,7 @@
 {
-  "name": "qr-service",
+  "name": "utils.qr",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,29 +15,22 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.8",
     "buffer": "^6.0.3",
-    "canvas": "^3.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "html-pdf": "^3.0.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.471.0",
     "next-themes": "^0.4.6",
     "process": "^0.11.10",
     "qr-image": "^3.2.0",
-    "qrcode-svg": "^1.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "svg2png": "^4.1.1",
-    "svg2png-converter": "^1.0.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@types/html-pdf": "^3.0.3",
     "@types/node": "^22.10.5",
     "@types/qr-image": "^3.2.9",
-    "@types/qrcode-svg": "^1.1.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react-swc": "^3.5.0",
@@ -55,5 +48,11 @@
   "browser": {
     "buffer": "buffer",
     "process": "process/browser"
+  },
+  "description": "Fast, private QR code generator that runs entirely in the browser",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/inkincaps/utils.qr"
   }
 }

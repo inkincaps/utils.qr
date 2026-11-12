@@ -4,7 +4,7 @@ import { Buffer } from 'buffer';
 declare global {
     interface Window {
         Buffer: typeof Buffer;
-        global: any;
+        global: typeof globalThis;
     }
 }
 
